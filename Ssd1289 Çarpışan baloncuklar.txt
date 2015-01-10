@@ -1,0 +1,246 @@
+#include "stm32f4xx.h"
+#include "system_stm32f4xx.h"
+#include "stm32f4_discovery.h"
+#include "delay.h"
+#include "tft_lcd.h"
+#include "touch.h"
+#include "math.h"
+#include "stdio.h"
+
+#define tftX 240
+#define tftY 320
+#define n 10
+#define PI 3.14159265
+
+//Fonksiyonlarim
+
+
+
+void tft_yaz(void);
+
+//resim , touch panel tanimlamalari
+extern unsigned int xxx,yyy;
+extern unsigned char flag;
+
+extern u8 gImage_RES[];
+extern u8 gImage_logo[];
+extern u8 gImage_NKU[];
+extern u8 gImage_gs[];
+extern u8 gImage_r3[];
+extern u8 gImage_sil[];
+
+//integer char float tanimlamalar
+
+char deger1[20];
+
+uint8_t i;
+uint8_t j;
+
+float x[n];
+float y[n];
+uint8_t r[n];
+
+float oldX[n];
+float oldY[n];
+
+float velX[n];
+float velY[n];
+
+uint8_t red[n];
+uint8_t green[n];
+uint8_t blue[n];
+/**************************/
+GPIO_InitTypeDef GPIO_InitStructure;
+
+void delay_ms(u16 Zms);
+void delay_us(u32 Zus);
+/*********************************/
+void setupBouncing(void)
+{
+	float circle1;
+	const float phase1=2*PI/3;
+	const float phase2=4*PI/3;
+	
+	for(i=0;i<n;i++)
+	{
+		x[i]=tftX/2;
+		y[i]=tftY/2;
+		r[i]=i*2+10;
+		
+	oldX[i] = x[i];
+  oldY[i] = y[i];
+
+  velX[i] = 2;
+  velY[i] = 2;
+		
+		circle1=i*2*PI/n;
+		red[i]=cos(circle1)*127+127;
+		green[i] = cos(circle1 + phase2) * 127 + 127;
+    blue[i] = cos(circle1 + phase1) * 127 + 127;
+}
+}
+void collision(void)
+{
+	float disX=x[j]-x[i];
+	float disY=y[j]-x[i];
+	float d2=disX*disX+disY*disY;
+	
+	if(d2 != 0)
+	{
+		float  rij=r[i]+r[j];
+		float rij2 = rij * rij;
+		
+		if(d2 < rij2) {
+
+			float ii=(disX*velX[i]+disY*velY[i])/d2;
+			float ji = (disX * velY[i] - disY * velX[i]) / d2;
+      float ij = (disX * velX[j] + disY * velY[j]) / d2;
+      float jj = (disX * velY[j] - disY * velX[j]) / d2;
+      float ratio = rij / sqrt(d2);
+			
+	 velX[i] = ij * disX - ii * disY;
+   velY[i] = ij * disY + ii * disX;
+   velX[j] = ji * disX - jj * disY;
+   velY[j] = ji * disY + jj * disX;
+
+   disX *= (ratio - 1) / 2;
+   disY *= (ratio - 1) / 2;
+
+   x[j] += disX;
+   y[j] += disY;
+   x[i] -= disX;
+   y[i] -= disY;
+}
+}
+}
+
+void borders(void) {
+
+
+	if(x[i]>=tftX-r[i]-1)
+	{
+		x[i]=tftX-r[i]-1;
+		velX[i]=-velX[i];
+		
+}
+else if (x[i]<=r[i])
+{
+	x[i]=r[i];
+	velX[i]=-velX[i];
+	
+}
+if(y[i]>=tftY-r[i]-1)
+{
+	y[i] = tftY - r[i] - 1;
+  velY[i] = -velY[i];
+}
+else if(y[i] <= r[i]) {
+  y[i] = r[i];
+  velY[i] = -velY[i];
+ }
+	
+}
+void draw(void) {
+
+	LCD_SetTextColor(ASSEMBLE_RGB(0,0,0));
+	LCD_DrawCircle(oldX[i],oldY[i],r[i]);
+	
+	LCD_SetTextColor(ASSEMBLE_RGB(red[i],green[i],blue[i]));
+	LCD_DrawCircle(x[i],y[i],r[i]);
+	
+	oldX[i]=x[i];
+	oldY[i]=y[i];
+	
+}
+
+void loop (void) 
+{
+	for(i=0;i<n;i++)
+	{
+		x[i]+=velX[i];
+		y[i]+=velY[i];
+		
+		for(j=i+1;j<n;j++)
+ collision();
+
+  borders();
+
+  if((x[i]) != (oldX[i]) || (y[i]) != (oldY[i]))
+   draw();
+			
+
+
+}
+}
+
+int main(void)
+{
+
+	
+  if (SysTick_Config(SystemCoreClock / 1000))
+  { 
+    /* Capture error */ 
+    while (1);
+  }
+	  STM_EVAL_LEDInit(LED4);
+  STM_EVAL_LEDInit(LED3);
+	
+	touch_init();
+  Delay(0x3FFFFF);
+  
+	LCD_Init();
+  Delay(0x3FFFFF);
+  LCD_Clear(BLACK);
+  LCD_SetTextColor(GREEN);
+	LCD_BackLight(100);
+	
+//	tft_yaz();
+	Delay(500);
+	
+ 
+ // LCD_SetDisplayWindow(0, 0, 239, 319);
+	
+setupBouncing();
+
+	
+  while(1)
+  { 
+		
+		loop();
+      Delay(100);
+     STM_EVAL_LEDToggle(LED4);
+		//LCD_Clear(BLACK);
+
+ }
+}
+void tft_yaz(void)
+{
+	LCD_SetTextColor(GREEN);
+
+	  LCD_SetBackColor(LCD_COLOR_BLUE);
+	  LCD_BackLight(100);
+	  LCD_StringLine(100,30, "Kaan");
+	  LCD_StringLine(85,45, "Kandemir");
+	  LCD_StringLine(30,80,"NAMIK KEMAL UNIVERSITESI");
+	  LCD_StringLine(15,100,"CORLU MUHENDISLIK FAKULTESI");
+	  LCD_StringLine(8,125,"ELEKTRONIK VE HABERLESME MUH.");
+    LCD_StringLine(45,150,"KEIL UVISION 4.70");
+	LCD_StringLine(55,170,"SSD1289+XPT2046");
+}
+
+
+
+
+
+
+
+
+uint16_t EVAL_AUDIO_GetSampleCallBack(void)
+{
+    return 0; // ses çipini kullaniyorsaniz tek sample veriyi burada return ile döndürün.
+}
+void EVAL_AUDIO_TransferComplete_CallBack(uint32_t pBuffer, uint32_t Size)
+{
+    return; // ses çipini kullaniyorsaniz  burada çipe veri aktarimi DMA sona ermis
+}
+

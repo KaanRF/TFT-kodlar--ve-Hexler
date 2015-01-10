@@ -1,0 +1,70 @@
+#include "stm32f4xx.h"
+#include "tft_lcd.h"
+#include "delay.h"
+#include "arm_math.h"
+
+int16_t PR[16]={0},QRS[10]={0},ST[10]={0},bolumPR[10]={0};
+void drawEKG(const uint16_t Xpos, const uint16_t Ypos, const uint16_t yukseklik);
+
+int main()
+{
+	LCD_Init();
+	Delay(99);
+	LCD_Clear(BLACK);
+	Delay(99);
+
+	
+	
+	while(1)
+	{
+	drawEKG(60,60,100);
+	}
+}
+void drawEKG(const uint16_t Xpos, const uint16_t Ypos, const uint16_t yukseklik)
+{
+	uint16_t Yposx=0;
+	
+	for(Yposx = 0; Yposx < yukseklik && Yposx < 240; Yposx++)
+	{
+		LCD_SetCursor(Xpos, Ypos);
+		Delay(50);
+		LCD_WriteRAM_Prepare();
+		Delay(50);
+		LCD_SetColors(RED,BLACK);
+		LCD_DrawUniLine(Xpos,Ypos,0,0);
+		for(Yposx = 0; Yposx < yukseklik && Yposx < 240; Yposx++)
+	{
+		LCD_SetCursor(Xpos, Ypos);
+		Delay(50);
+		LCD_WriteRAM_Prepare();
+		Delay(50);
+		LCD_SetColors(RED,BLACK);
+		LCD_DrawUniLine(Xpos,Ypos,Xpos-10,Ypos-20);
+		
+		for(Yposx = 0; Yposx < yukseklik && Yposx < 240; Yposx++)
+	{
+		LCD_SetCursor(Xpos, Ypos);
+		Delay(50);
+		LCD_WriteRAM_Prepare();
+		Delay(50);
+		LCD_SetColors(RED,BLACK);
+		LCD_DrawUniLine(Xpos,Ypos,Xpos+100,Ypos+10);
+		
+		for(Yposx = 0; Yposx < yukseklik && Yposx < 240; Yposx++)
+	{
+		LCD_SetCursor(Xpos, Ypos);
+		Delay(50);
+		LCD_WriteRAM_Prepare();
+		Delay(50);
+		LCD_SetColors(RED,BLACK);
+		LCD_DrawUniLine(Xpos,Ypos,Xpos+10,Ypos+50);
+		
+	}
+		
+	}
+	}
+	
+		
+	}
+	
+}

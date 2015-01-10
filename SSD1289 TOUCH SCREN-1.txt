@@ -1,0 +1,132 @@
+#include "stm32f4xx.h"
+#include "system_stm32f4xx.h"
+#include "delay.h"
+#include "tft_lcd.h"
+#include "touch.h"
+#include "math.h"
+
+void tft_yaz(void);
+
+extern unsigned int xxx,yyy;
+extern unsigned char flag;
+
+extern u8 gImage_RES[];
+extern u8 gImage_logo[];
+extern u8 gImage_NKU[];
+extern u8 gImage_gs[];
+extern u8 gImage_r3[];
+extern u8 gImage_sil[];
+
+int i;
+
+int main(void)
+{
+	float x1,y1;
+	float x2,y2;
+	
+	touch_init();
+  Delay(0x3FFFFF);
+  LCD_Init();
+  Delay(0x3FFFFF);
+  LCD_Clear(RED);
+  LCD_SetTextColor(GREEN);
+	LCD_BackLight(100);
+	tft_yaz();
+	Delay(500);
+	
+	LCD_WriteBMP(239,319 , 240, 320, gImage_gs);
+ 
+  LCD_SetDisplayWindow(0, 0, 239, 319);
+
+   i = 1;
+	
+	
+  while(1)
+  {
+BASA :
+				Read_Ads7846();
+		
+			 if(flag==1)
+	 {
+	   flag=0;
+		 
+		 
+		x1=xxx;
+		x2=x1/7.666666667;
+//		x2=x1/5.609375;
+		x2=x2-13;
+		x1=x2;
+		
+		 
+		y1=yyy;
+		y2=y1/5.609375;
+//		y2=y1/7.666666667 ;
+		y2=y2-20;
+		y1=y2 ;
+		 }
+		 
+	
+				if ((x1>200) && (x1<215) && (y1>304) && (y1<320))  
+						{
+						LCD_WriteBMP(239,319 , 240,320, gImage_r3);	
+						goto BASA ;
+						}
+						
+						
+						
+// Ekran silme fonksiyonu .		 
+				if ((x1>215) && (x1<240) && (y1>304) && (y1<320)) 
+						{
+							LCD_SetDisplayWindow(0, 0, 239, 319);
+							LCD_Clear(BLACK);
+							LCD_BackLight(100);	
+							LCD_WriteBMP(239,319 , 15, 16, gImage_logo);
+							goto BASA ;
+						}
+			
+// Ekran Isigi  ayarlama fonksiyonu
+				if ((x1>0) && (y1<10) && (x1<101))
+						{
+							LCD_BackLight(x1);	
+							goto BASA ;
+						}
+		
+// Ekrana piksel basma fonksiyonu .	
+				if ((x1>0) && (y1>0)) 
+						{	
+							Pixel(x1,y1,BLUE);
+							Pixel(x1+1,y1,BLUE);
+							Pixel(x1,y1+1,BLUE);
+							Pixel(x1+1,y1+1,BLUE);
+						}
+			
+
+						
+ }
+}
+void tft_yaz(void)
+{
+	LCD_SetTextColor(GREEN);
+
+	  LCD_SetBackColor(LCD_COLOR_BLUE);
+	  LCD_BackLight(100);
+	  LCD_StringLine(100,30, "Kaan");
+	  LCD_StringLine(85,45, "Kandemir");
+	  LCD_StringLine(30,80,"NAMIK KEMAL UNIVERSITESI");
+	  LCD_StringLine(15,100,"CORLU MUHENDISLIK FAKULTESI");
+	  LCD_StringLine(8,125,"ELEKTRONIK VE HABERLESME MUH.");
+    LCD_StringLine(45,150,"KEIL UVISION 4.70");
+	LCD_StringLine(55,170,"SSD1289+XPT2046");
+}
+
+
+
+uint16_t EVAL_AUDIO_GetSampleCallBack(void)
+{
+    return 0; // ses çipini kullaniyorsaniz tek sample veriyi burada return ile döndürün.
+}
+void EVAL_AUDIO_TransferComplete_CallBack(uint32_t pBuffer, uint32_t Size)
+{
+    return; // ses çipini kullaniyorsaniz  burada çipe veri aktarimi DMA sona ermis
+}
+

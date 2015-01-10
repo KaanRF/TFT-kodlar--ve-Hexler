@@ -1,0 +1,76 @@
+#include "stm32f4xx.h"
+#include "lcd.h"
+#include "delay.h"
+#include "arm_math.h"
+
+float32_t FFT[256]={0};
+uint16_t  FFTold[256]={0};
+
+
+float diodo_spektras[512]={0};
+
+
+float32_t maxValue;
+float32_t  f_offset = 10.0f;
+
+
+int main()
+{
+	
+	arm_status status; 
+  arm_cfft_radix4_instance_f32 S; 
+  uint16_t i=0,k=0;
+  status = arm_cfft_radix4_init_f32(&S, 256, 0, 1);
+  Delay(0xFFFFF);
+  LCD_Init();
+  LCD_Clear(BLACK);
+  
+
+  LCD_SetColors(RED,BLACK);
+  while(1)
+  {
+    k=0;
+    i=0;
+    while(i<256)
+    {
+      diodo_spektras[k]=0.0f;
+      diodo_spektras[k]=sinf(2*3.14*i*f_offset/256);
+      k++;
+      diodo_spektras[k]=0;
+      k++;
+      i++;
+    }
+    f_offset+=0.1f;
+    if(f_offset>100)
+      f_offset=0;
+      
+    arm_cfft_radix4_f32(&S,diodo_spektras);
+    arm_cmplx_mag_f32(diodo_spektras, FFT, 256);
+    i=0;
+    maxValue=-100.0f;
+    while(i<256)
+    {
+      if(FFT[i]>maxValue)
+      {
+        maxValue=FFT[i];
+      }
+      i++;
+    }
+    maxValue/=300;
+    i=1;
+    while(i<231)
+    {
+      LCD_SetColors(BLACK,BLACK);
+      LCD_DrawUniLine(i,310,i,310-FFTold[i]);
+      LCD_SetColors(RED,BLACK);
+      LCD_DrawUniLine(i,310,i,310-(int)(FFT[i]/maxValue));
+      FFTold[i]=(int)(FFT[i]/maxValue);
+      i++;     
+    }
+    FFTold[i]=(int)(FFT[i]/maxValue);
+    i=0;
+    Delay(0xFFF);
+  }
+}
+
+
